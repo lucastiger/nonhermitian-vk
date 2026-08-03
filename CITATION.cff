@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use this software or the data it generates, please cite both the software and the paper it accompanies."
+title: "nonhermitian-vk: reproducibility code for a biorthogonal, conditioning-corrected Vakhitov-Kolokolov theory"
+abstract: >-
+  Code and generated data reproducing every numerical table in "The
+  Vakhitov-Kolokolov criterion beyond Hermiticity: a biorthogonal,
+  conditioning-corrected stability theory for non-Hermitian solitons".
+  The package computes stationary solitons of a nonlinear Schrodinger equation
+  with local gain and loss, the adjoint kernel of the doubled linearisation, the
+  biorthogonal quasi-power Q, its conditioning factor K, and the
+  exceptional-point splitting coefficient gamma.
+type: software
+authors:
+  - family-names: "Wu"
+    given-names: "Lucas"
+    orcid: "https://orcid.org/PLACEHOLDER-ORCID-NOT-YET-ASSIGNED"
+version: "1.0.0"
+date-released: "2026-08-03"
+license: MIT
+license-url: "https://opensource.org/licenses/MIT"
+repository-code: "https://github.com/lucastiger/nonhermitian-vk"
+doi: "PLACEHOLDER-ZENODO-DOI-NOT-YET-MINTED"
+keywords:
+  - non-Hermitian
+  - solitons
+  - Vakhitov-Kolokolov
+  - biorthogonal
+  - PT symmetry
+  - nonlinear Schrodinger equation
+preferred-citation:
+  type: article
+  title: "The Vakhitov-Kolokolov criterion beyond Hermiticity: a biorthogonal, conditioning-corrected stability theory for non-Hermitian solitons"
+  authors:
+    - family-names: "Wu"
+      given-names: "Lucas"
+      orcid: "https://orcid.org/PLACEHOLDER-ORCID-NOT-YET-ASSIGNED"
+  journal: "Physica D: Nonlinear Phenomena"
+  year: 2026
+  doi: "PLACEHOLDER-ARTICLE-DOI-NOT-YET-ASSIGNED"
+  notes: "Submitted. The DOI and ORCID fields in this file are placeholders and must be filled in before the record is archived."

@@ -1,0 +1,8 @@
+# Versions used to produce the numbers reported in the paper.
+# The results are not sensitive to these exact versions -- any recent NumPy and
+# SciPy reproduce the tables to the quoted precision -- but pinning them makes
+# the archived run bit-for-bit repeatable.
+numpy==2.4.4
+scipy==1.17.1
+sympy
+pytest
