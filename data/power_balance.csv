@@ -1,0 +1,13 @@
+check,parameter,value
+free_soliton_defect,A=0.05,0.07738287570680423
+free_soliton_defect,A=0.2,0.3095315028272169
+free_soliton_defect,A=0.8,1.2381260113088677
+wadati_symbolic_residual,-,0.0
+family_exists_V_minus_g2,residual,2.4326660411907414e-13
+family_fails_V_plus_g2,A_at_failure,0.024999999999999998
+branch_power_balance,omega=-0.30,4.6863254018111454e-14
+branch_power_balance,omega=-0.26,-3.512301560704184e-14
+branch_power_balance,omega=-0.24,-7.718270467194173e-14
+branch_power_balance,omega=-0.22,-5.850579280301406e-14
+branch_power_balance,omega=-0.20,2.7681560747320874e-16
+branch_power_balance,omega=-0.18,1.9507358691347296e-14

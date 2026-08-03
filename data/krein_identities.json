@@ -1,0 +1,25 @@
+{
+  "script": "01_krein_reduction.py",
+  "git_commit": "9b453d8b5c11647942842ab928a626d635135cde",
+  "timestamp_utc": "2026-08-03T01:03:05Z",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "scipy_version": "1.17.1",
+  "parameters": {
+    "L": 18.0,
+    "N": 200,
+    "V0": 2.0,
+    "sigma": -1.0,
+    "omega": -2.5,
+    "eps_identities": 0.2,
+    "eps_scan": [
+      0.16,
+      0.08,
+      0.04,
+      0.02,
+      0.01
+    ],
+    "hh": 0.002,
+    "profile": "pt_well"
+  }
+}

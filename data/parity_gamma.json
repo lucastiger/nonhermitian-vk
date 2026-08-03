@@ -1,0 +1,28 @@
+{
+  "script": "05_parity_gamma.py",
+  "git_commit": "9b453d8b5c11647942842ab928a626d635135cde",
+  "timestamp_utc": "2026-08-03T01:05:01Z",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "scipy_version": "1.17.1",
+  "parameters": {
+    "Lx": 20.0,
+    "N": 240,
+    "V0": 0.3,
+    "A": 0.3,
+    "sigma": -1.0,
+    "omegas": [
+      -0.8,
+      -1.5,
+      -2.5
+    ],
+    "hh": 0.002,
+    "profile": "pt_barrier",
+    "directions": [
+      "sech^2(x)",
+      "sech(x)tanh(x)",
+      "sech^2(x-1)"
+    ],
+    "h_normalisation": "sup-norm 1"
+  }
+}

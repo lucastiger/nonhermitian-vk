@@ -1,0 +1,36 @@
+{
+  "script": "03_theorem_a_convergence.py",
+  "git_commit": "9b453d8b5c11647942842ab928a626d635135cde",
+  "timestamp_utc": "2026-08-03T01:04:40Z",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "scipy_version": "1.17.1",
+  "parameters": {
+    "A": 1.0,
+    "sigma": -1.0,
+    "omegas": [
+      -0.3,
+      -0.26,
+      -0.24,
+      -0.22,
+      -0.2,
+      -0.18
+    ],
+    "grids": [
+      [
+        18.0,
+        220
+      ],
+      [
+        22.0,
+        260
+      ],
+      [
+        22.0,
+        320
+      ]
+    ],
+    "omega_start": -0.5,
+    "profile": "wadati_gaussian"
+  }
+}

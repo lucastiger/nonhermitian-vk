@@ -1,0 +1,18 @@
+{
+  "script": "02_theorem_a_branch.py",
+  "git_commit": "9b453d8b5c11647942842ab928a626d635135cde",
+  "timestamp_utc": "2026-08-03T01:03:29Z",
+  "python_version": "3.11.15",
+  "numpy_version": "2.4.4",
+  "scipy_version": "1.17.1",
+  "parameters": {
+    "L": 20.0,
+    "N": 240,
+    "A": 1.0,
+    "sigma": -1.0,
+    "omega_0": -0.5,
+    "omega_range_down": -2.6,
+    "omega_range_up": -0.15,
+    "profile": "wadati_gaussian"
+  }
+}
