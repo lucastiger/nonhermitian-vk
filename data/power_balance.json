@@ -1,7 +1,7 @@
 {
   "script": "04_power_balance.py",
-  "git_commit": "ba4833881b2f171ebae4ae0cd52e9518135c09cf",
-  "timestamp_utc": "2026-08-03T00:57:08Z",
+  "git_commit": "9b453d8b5c11647942842ab928a626d635135cde",
+  "timestamp_utc": "2026-08-03T01:04:57Z",
   "python_version": "3.11.15",
   "numpy_version": "2.4.4",
   "scipy_version": "1.17.1",
