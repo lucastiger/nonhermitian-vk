@@ -1,8 +1,8 @@
 {
   "script": "05_parity_gamma.py",
-  "git_commit": "9b453d8b5c11647942842ab928a626d635135cde",
-  "timestamp_utc": "2026-08-03T01:05:01Z",
-  "python_version": "3.11.15",
+  "git_commit": "f9f200878948450ab0a7cc712e37ef867890cd7f",
+  "timestamp_utc": "2026-09-15T08:41:45Z",
+  "python_version": "3.13.13",
   "numpy_version": "2.4.4",
   "scipy_version": "1.17.1",
   "parameters": {
