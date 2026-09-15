@@ -6,12 +6,7 @@ SCRIPTS := 01_krein_reduction.py \
            03_theorem_a_convergence.py \
            04_power_balance.py \
            05_parity_gamma.py \
-           06_gauge_monodromy.py \
-           07_kappa_branch.py \
-           08_kappa_local_bifurcation.py \
-           09_quartet_symmetry.py \
-           10_intertwiner_nogo.py \
-           11_k2_closure.py
+           06_gauge_monodromy.py
 
 CSVS := krein_identities.csv \
         eps_scan.csv \
@@ -19,16 +14,7 @@ CSVS := krein_identities.csv \
         theorem_a_convergence.csv \
         power_balance.csv \
         parity_gamma.csv \
-        gauge_monodromy.csv \
-        kappa_branch.csv \
-        hopf_collisions.csv \
-        kappa_local_bifurcation.csv \
-        kappa_hermitian_limit.csv \
-        quartet_symmetry.csv \
-        quartet_m3.csv \
-        intertwiner_nogo.csv \
-        k2_closure.csv \
-        k2_eps_scan.csv
+        gauge_monodromy.csv
 
 .DEFAULT_GOAL := help
 .PHONY: help all test test-slow clean
