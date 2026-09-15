@@ -24,7 +24,8 @@ from .core import (
     reflect,
     transport,
 )
-from .profiles import pt_barrier, pt_well, wadati_gaussian
+from .profiles import (pt_barrier, pt_well, wadati_even,
+                       wadati_gaussian, wadati_shifted)
 
 __version__ = "1.0.0"
 
@@ -42,6 +43,8 @@ __all__ = [
     "reflect",
     "transport",
     "wadati_gaussian",
+    "wadati_shifted",
+    "wadati_even",
     "pt_well",
     "pt_barrier",
     "__version__",
