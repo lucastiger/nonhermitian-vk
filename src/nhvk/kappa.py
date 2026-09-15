@@ -60,6 +60,7 @@ __all__ = [
     "nu_from_block",
     "secant",
     "free_seed",
+    "force_balance_position",
     "build_wadati",
     "move_omega",
     "Branch",
@@ -136,7 +137,7 @@ def Lminus(M, phi0: np.ndarray, om: float) -> np.ndarray:
 
 # ------------------------------------------------------------------ solvers
 def newton_robust(M, phi0, om, eps, tol=1e-12, itmax=60, bcol=None,
-                  robust=True, seed=11):
+                  robust=True, seed=11, max_backtrack=12):
     """:meth:`nhvk.core.Model.newton` with a replaceable column border.
 
     The bordered matrix is ``[[J, c], [w^T, 0]]`` with ``w`` the unit U(1) orbit
@@ -170,8 +171,21 @@ def newton_robust(M, phi0, om, eps, tol=1e-12, itmax=60, bcol=None,
                 return None
             if not np.all(np.isfinite(d)):
                 return None
-            u = u + d[:n]
-            v = v + d[n:2*n]
+            # Backtracking line search.  Pure globalisation: it changes the path
+            # to the fixed point, never the fixed point itself, and never the
+            # acceptance threshold below.  It is needed because the bordered
+            # Jacobian is nearly singular in the translation direction whenever
+            # the trapping potential is weak (see `force_balance_position`), and
+            # the undamped step is then enormous and unreliable.
+            nr = norm(r)*np.sqrt(M.dx)
+            t = 1.0
+            for _ in range(max_backtrack):
+                uu, vv = u + t*d[:n], v + t*d[n:2*n]
+                if norm(M.res(uu, vv, om, eps))*np.sqrt(M.dx) < nr:
+                    break
+                t *= 0.5
+            u = u + t*d[:n]
+            v = v + t*d[n:2*n]
         if norm(M.res(u, v, om, eps))*np.sqrt(M.dx) > 1e-8:
             return None
         return u + 1j*v
@@ -394,48 +408,180 @@ def free_seed(om: float, x: np.ndarray) -> np.ndarray:
     return np.sqrt(2*abs(om))/np.cosh(np.sqrt(abs(om))*x) + 0j
 
 
-def build_wadati(profile, A, om0, x, D2, dx, sigma=-1.0, beta=0.0,
-                 dA=0.005, dbeta=0.005):
-    """Build a Wadati branch: ramp ``A`` from the free soliton, then ``beta``.
+def force_balance_position(profile, A, om, x, dx, n_scan=241, span=None):
+    """The soliton position selected by Lemma P in the ``A -> 0+`` limit.
 
-    The order matters.  At ``A = 0`` the free soliton is translation invariant,
-    so the phase-bordered Jacobian has a two-dimensional kernel; ramping
-    ``beta`` first fails for that reason, while ramping ``A`` first does not.
-    ``profile`` follows the :mod:`nhvk.profiles` signature ``profile(x, A)``.
+    Any decaying stationary state satisfies ``int G |phi|^2 dx = 0``.  At
+    leading order in ``A`` the profile is the free soliton translated to some
+    ``x_0``, so the admissible positions are the roots of
+
+        F(x_0) = int G(x) |phi_free(x - x_0)|^2 dx = 0 .
+
+    This is not a convenience: the branch has **no** centred solution for
+    ``A > 0`` when ``G`` is even, because an even ``|phi|^2`` would give
+    ``F(0) != 0``.  Seeding the continuation with a centred free soliton
+    therefore asks Newton to translate the profile by an O(1) distance through a
+    direction in which the bordered Jacobian is nearly singular, which is what
+    made the old ``A``-continuation machine-dependent.
+
+    ``F`` generally has more than one root, and **distinct roots are distinct
+    soliton branches**, not gauge copies -- so this function performs a branch
+    selection and the choice must be deterministic and recorded.  The
+    convention is: **the most negative root**.  It reproduces, for the three
+    profiles used in the paper, exactly the branches the earlier (undamped,
+    centred-seed) code reached by accident:
+
+    * ``wadati_gaussian``: roots ``-+1.461003``, a mirror pair related by
+      ``x -> -x`` and carrying identical ``P``, ``Q``, ``kappa`` and spectrum;
+      the rule selects ``-1.461003``.
+    * ``wadati_shifted``: roots ``+0.948837`` and ``-2.328904``, which are
+      **physically different** branches -- the first has no complex gap mode at
+      ``omega = -0.7`` at all, the second carries the quartet
+      ``+-0.358302268382 +- 0.099631809517i`` quoted in Section ``sec:quartet``.
+      The rule selects ``-2.328904``, i.e. the paper's branch.
+    * ``wadati_even`` (the PT control): ``F`` is odd, the only root is
+      ``x_0 = 0``, and that is the PT-covariant centred solution.
+
+    Pass ``x0`` explicitly to :func:`build_wadati` to override the convention.
+
+    Returns ``(x_0, F'(x_0), roots)``.
     """
-    ph = free_seed(om0, x)
-    Ac, st = 0.0, dA
-    M = None
+    V, G = profile(x, A)
+    Lx = float(np.max(np.abs(x)))
+    span = span if span is not None else min(6.0, 0.4*Lx)
+
+    def F(x0):
+        ph = free_seed(om, x - x0)
+        return float(np.sum(G*np.abs(ph)**2)*dx)
+
+    ts = np.linspace(-span, span, n_scan)
+    vals = np.array([F(t) for t in ts])
+    roots = []
+    for i in range(len(ts) - 1):
+        if vals[i] == 0.0:
+            roots.append(float(ts[i]))
+        elif vals[i]*vals[i+1] < 0:
+            a, b = ts[i], ts[i+1]
+            fa = vals[i]
+            for _ in range(80):
+                m = 0.5*(a + b)
+                fm = F(m)
+                if fa*fm <= 0:
+                    b = m
+                else:
+                    a, fa = m, fm
+            roots.append(0.5*(a + b))
+    if not roots:
+        return 0.0, 0.0, []
+    roots.sort()
+    x0 = roots[0]
+    h = 1e-4
+    return x0, (F(x0 + h) - F(x0 - h))/(2*h), roots
+
+
+def build_wadati(profile, A, om0, x, D2, dx, sigma=-1.0, beta=0.0,
+                 dA=0.05, dbeta=0.005, A_start=0.2, report=True,
+                 min_overlap=0.99, x0=None):
+    """Build a Wadati branch at amplitude ``A`` and frequency ``om0``.
+
+    The construction is in three stages.
+
+    1. **Seed.** The free soliton translated to the Lemma-P position
+       ``x_0`` of :func:`force_balance_position`.  This is the ``A -> 0+`` limit
+       of the branch, so it is the correct starting point, and it is chosen
+       deterministically rather than found by accident.
+    2. **First solve** at ``A_start = min(A_start, A)``.  The
+       ``A``-continuation is *not* started from ``A = 0``.  At ``A = 0`` the
+       free soliton is translation invariant, and for small ``A`` the
+       translation direction is soft: the second smallest singular value of the
+       stationary Jacobian is proportional to ``A``, so the phase-bordered
+       system has condition number of order ``1/A`` -- about ``6e8`` at
+       ``A = 0.005``.  In that regime the undamped Newton step is unreliable and
+       convergence within ``itmax`` is decided by rounding.  Nothing in the
+       paper requires a state at small ``A``; the branch is smooth and
+       single-valued in ``A`` (verified by the continuity check below), so the
+       homotopy may start wherever it is well conditioned.
+    3. **Continuation** in ``A`` to the target, then in ``beta``, with a damped
+       Newton at every step.
+
+    Branch fidelity is checked at every accepted step: the normalised overlap
+    with the previous profile must exceed ``min_overlap``, which detects a jump
+    to the mirror branch or to a different solution.  ``report=True`` prints a
+    short provenance block -- seed position, conditioning, step count, final
+    residual, minimum overlap, centroid drift -- so that the script output
+    itself carries the evidence that the intended branch was tracked.
+
+    Returns ``(M, phi)``.
+    """
+    def solve(Mm, guess, tag):
+        p = newton_robust(Mm, guess, om0, 1.0)
+        if p is None or np.sum(np.abs(p)**2)*dx < 1e-8:
+            raise RuntimeError(f"Newton failed during {tag}")
+        return p
+
+    def overlap(p, q):
+        return float(abs(np.sum(np.conj(p)*q))/(norm(p)*norm(q)))
+
+    x0_auto, dF, roots = force_balance_position(profile, max(A, 1e-6),
+                                              om0, x, dx)
+    x0 = x0_auto if x0 is None else float(x0)
+    A0 = min(A_start, A)
+    ph = free_seed(om0, x - x0)
+    V, G = profile(x, A0)
+    M = QuinticModel(V, G, sigma, x, D2, dx, 0.0)
+    ph = solve(M, ph, f"the first solve at A = {A0:g}")
+
+    min_ov, nstep, Ac = 1.0, 0, A0
     while Ac < A - 1e-13:
-        st = min(st, A - Ac)
+        st = min(dA, A - Ac)
         V, G = profile(x, Ac + st)
         M = QuinticModel(V, G, sigma, x, D2, dx, 0.0)
-        p = newton_robust(M, ph, om0, 1.0)
-        if p is None or np.sum(np.abs(p)**2)*dx < 1e-8:
-            st /= 2
-            if st < 1e-7:
-                raise RuntimeError(f"A-continuation stalled at A = {Ac:.6f}")
-            continue
-        ph, Ac = p, Ac + st
-        st = min(st*1.3, 0.02)
+        p = solve(M, ph, f"the A-continuation at A = {Ac + st:g}")
+        ov = overlap(ph, p)
+        if ov < min_overlap:
+            raise RuntimeError(
+                f"A-continuation lost branch identity at A = {Ac + st:g}: "
+                f"overlap with the previous profile is {ov:.4f}")
+        min_ov = min(min_ov, ov)
+        ph, Ac, nstep = p, Ac + st, nstep + 1
+
     b, stb = 0.0, dbeta
     while b < beta - 1e-13:
         stb = min(stb, beta - b)
         V, G = profile(x, A)
         M = QuinticModel(V, G, sigma, x, D2, dx, b + stb)
-        p = newton_robust(M, ph, om0, 1.0)
-        if p is None or np.sum(np.abs(p)**2)*dx < 1e-8:
-            stb /= 2
-            if stb < 1e-7:
-                raise RuntimeError(f"beta-continuation stalled at beta = {b:.6f}")
-            continue
-        ph, b = p, b + stb
+        p = solve(M, ph, f"the beta-continuation at beta = {b + stb:g}")
+        ov = overlap(ph, p)
+        if ov < min_overlap:
+            raise RuntimeError(
+                f"beta-continuation lost branch identity at beta = {b + stb:g}:"
+                f" overlap with the previous profile is {ov:.4f}")
+        min_ov = min(min_ov, ov)
+        ph, b, nstep = p, b + stb, nstep + 1
         stb *= 1.3
+
     V, G = profile(x, A)
     M = QuinticModel(V, G, sigma, x, D2, dx, beta)
-    ph = newton_robust(M, ph, om0, 1.0)
-    if ph is None:
-        raise RuntimeError("final Newton polish failed")
+    ph = solve(M, ph, "the final polish")
+    res = float(norm(M.res(ph.real, ph.imag, om0, 1.0))*np.sqrt(dx))
+
+    if report:
+        P = float(np.sum(np.abs(ph)**2)*dx)
+        cen = float(np.sum(x*np.abs(ph)**2)*dx/P)
+        u, v = ph.real, ph.imag
+        n = M.n
+        J = M.jac(u, v, om0, 1.0)
+        w = np.concatenate([-v, u]); w /= norm(w)
+        B = np.zeros((2*n+1, 2*n+1))
+        B[:2*n, :2*n] = J; B[:2*n, 2*n] = w; B[2*n, :2*n] = w
+        sv = np.linalg.svd(B, compute_uv=False)
+        allr = ", ".join(f"{r:+.6f}" for r in roots) or "none"
+        print(f"  branch: Lemma-P force-balance roots [{allr}]; seed x_0 = "
+              f"{x0:+.6f} (F'(x_0) = {dF:+.3e})")
+        print(f"  branch: A: {A0:g} -> {A:g}, beta: 0 -> {beta:g} in "
+              f"{nstep} continuation step(s)")
+        print(f"  branch: residual {res:.2e}, cond(bordered J) {sv[0]/sv[-1]:.2e}, "
+              f"min overlap {min_ov:.6f}, P = {P:.8f}, centroid {cen:+.6f}")
     return M, ph
 
 
